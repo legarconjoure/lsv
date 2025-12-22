@@ -564,7 +564,7 @@ pub fn handle_key(
         app.refresh_preview();
       }
     }
-    (KeyCode::Down, _) =>
+    (KeyCode::Down, _) | (KeyCode::Char('j'), _) =>
     {
       if let Some(sel) = app.list_state.selected()
       {
