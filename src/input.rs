@@ -580,7 +580,7 @@ pub fn handle_key(
         app.refresh_preview();
       }
     }
-    (KeyCode::Enter, _) | (KeyCode::Right, _) =>
+    (KeyCode::Enter, _) | (KeyCode::Right, _) | (KeyCode::Char('l'), _) =>
     {
       if let Some(entry) = app.selected_entry()
         && entry.is_dir
