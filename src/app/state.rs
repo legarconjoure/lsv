@@ -56,12 +56,34 @@ pub enum Overlay
   CommandPane(Box<CommandPaneState>),
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
+pub enum PreviewContent
+{
+  #[allow(dead_code)]
+  Text(Vec<String>),
+  Image(std::path::PathBuf),
+}
+
+#[derive(Debug, Clone)]
 pub struct PreviewState
 {
   pub static_lines: Vec<String>,
   pub cache_key:    Option<(std::path::PathBuf, u16, u16)>,
   pub cache_lines:  Option<Vec<String>>,
+  pub content:      Option<PreviewContent>,
+}
+
+impl Default for PreviewState
+{
+  fn default() -> Self
+  {
+    Self {
+      static_lines: Vec::new(),
+      cache_key:    None,
+      cache_lines:  None,
+      content:      None,
+    }
+  }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -171,6 +193,7 @@ pub struct App
   pub(crate) pending_mark:      bool,
   pub(crate) pending_goto:      bool,
   pub(crate) running_preview:   Option<RunningPreview>,
+  pub(crate) image_state:       Option<Box<dyn std::any::Any>>,
 }
 
 pub struct RunningPreview

@@ -97,6 +97,7 @@ impl App
     self.preview.static_lines.clear();
     self.preview.cache_key = None;
     self.preview.cache_lines = None;
+    self.image_state = None;
     // Channel to stream lines
     let (tx, rx) = mpsc::channel::<Option<String>>();
     // Build platform shell

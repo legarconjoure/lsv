@@ -1,6 +1,7 @@
 pub mod ansi;
 pub mod colors;
 pub mod format;
+pub mod image_preview;
 pub mod overlays;
 pub mod panes;
 pub mod preview;

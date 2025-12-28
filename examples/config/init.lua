@@ -116,16 +116,10 @@ lsv.set_previewer(function(ctx)
 		or ctx.current_file_extension == "gif"
 		or ctx.current_file_extension == "bmp"
 		or ctx.current_file_extension == "tiff"
+		or ctx.current_file_extension == "webp"
+		or ctx.current_file_extension == "ico"
 	then
-		-- Force text/ANSI rendering inside TUI; disable kitty/iterm image protocol
-		-- to avoid sequences that won't render within ratatui panels.
-		-- You can remove --static if your terminal supports sixel and you add support later.
-		return string.format(
-			"VIU_NO_KITTY=1 viu --static --width %d --height %d %s",
-			ctx.preview_width - 2,
-			ctx.preview_height - 4,
-			shquote(ctx.current_file)
-		)
+		return nil
 	elseif not ctx.is_binary then
 		return string.format(
 			"bat --color=always --style=numbers --paging=never --wrap=never --line-range=:%d %s",

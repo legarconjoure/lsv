@@ -22,7 +22,13 @@ use ratatui::{
   },
 };
 
-use crate::ui::ansi::ansi_spans;
+use crate::{
+  app::state::PreviewContent,
+  ui::{
+    ansi::ansi_spans,
+    image_preview::draw_image_preview,
+  },
+};
 use mlua::Value as LuaValue;
 
 const PREVIEW_LINES_LIMIT: usize = 1000;
@@ -34,7 +40,10 @@ pub fn draw_preview_panel(
 )
 {
   f.render_widget(Clear, area);
+  
   let mut dynamic_lines: Option<Vec<String>> = None;
+  let mut preview_content: Option<PreviewContent> = None;
+  
   if let Some(sel) = app.selected_entry()
   {
     if !sel.is_dir
@@ -43,21 +52,34 @@ pub fn draw_preview_panel(
       if app.preview.cache_key.as_ref() == Some(&key)
       {
         dynamic_lines = app.preview.cache_lines.clone();
+        preview_content = app.preview.content.clone();
       }
       else
       {
-        dynamic_lines =
+        let (lines, content) =
           run_previewer(app, &sel.path, area, PREVIEW_LINES_LIMIT);
+        dynamic_lines = lines;
+        preview_content = content.clone();
         app.preview.cache_key = Some(key);
         app.preview.cache_lines = dynamic_lines.clone();
+        app.preview.content = content;
       }
     }
     else
     {
       app.preview.cache_key = None;
       app.preview.cache_lines = None;
+      app.preview.content = None;
+      app.image_state = None;
     }
   }
+  
+  if let Some(PreviewContent::Image(ref path)) = preview_content
+  {
+    draw_image_preview(f, area, app, path);
+    return;
+  }
+  
   let mut block = Block::default().borders(Borders::ALL);
   if let Some(th) = app.config.ui.theme.as_ref()
   {
@@ -150,13 +172,33 @@ pub fn draw_preview_panel(
   f.render_widget(para, area);
 }
 
+fn is_image_file(path: &Path) -> bool
+{
+  if let Some(ext) = path.extension().and_then(|s| s.to_str())
+  {
+    matches!(
+      ext.to_lowercase().as_str(),
+      "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp" | "tiff" | "tif" | "ico"
+    )
+  }
+  else
+  {
+    false
+  }
+}
+
 fn run_previewer(
   app: &crate::App,
   path: &Path,
   area: Rect,
   limit: usize,
-) -> Option<Vec<String>>
+) -> (Option<Vec<String>>, Option<PreviewContent>)
 {
+  if is_image_file(path)
+  {
+    return (None, Some(PreviewContent::Image(path.to_path_buf())));
+  }
+  
   if let Some(lua) = app.lua.as_ref()
     && let (engine, Some(key)) = (&lua.engine, lua.previewer.as_ref())
   {
@@ -199,7 +241,8 @@ fn run_previewer(
                 "[preview] lua cmd='{}' cwd='{}' file='{}'",
                 cmd, dir_str, path_str
               ));
-              return run_previewer_command(&cmd, &dir_str, &path_str, limit);
+              let lines = run_previewer_command(&cmd, &dir_str, &path_str, limit);
+              return (lines, Some(PreviewContent::Text(Vec::new())));
             }
             Err(e) =>
             {
@@ -233,7 +276,7 @@ fn run_previewer(
       }
     }
   }
-  None
+  (None, None)
 }
 
 fn run_previewer_command(

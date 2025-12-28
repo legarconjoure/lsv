@@ -153,6 +153,7 @@ impl App
             pending_mark: false,
             pending_goto: false,
             running_preview: None,
+            image_state: None,
         };
         // Load marks from config root
         if let Some(root) = app.theme_root_dir()
