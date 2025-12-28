@@ -121,7 +121,17 @@ fn init_image_protocol(
 {
   use ratatui_image::picker::Picker;
   
-  let picker = Picker::halfblocks();
+  let picker = match Picker::from_query_stdio() {
+    Ok(p) => {
+      crate::trace::log(format!("[image] auto-detected protocol"));
+      p
+    },
+    Err(e) => {
+      crate::trace::log(format!("[image] protocol detection failed: {}, using halfblocks", e));
+      Picker::halfblocks()
+    }
+  };
+  
   let proto = picker.new_resize_protocol(img);
   Ok(proto)
 }
