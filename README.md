@@ -250,8 +250,10 @@ lsv.set_previewer(function(ctx)
 	elseif
 		ctx.current_file_extension == "jpg" or ctx.current_file_extension == "jpeg" or
 		ctx.current_file_extension == "png" or ctx.current_file_extension == "gif" or
-		ctx.current_file_extension == "bmp" or ctx.current_file_extension == "tiff" then
-		return string.format("VIU_NO_KITTY=1 viu --static --width %d --height %d %s", ctx.preview_width - 2, ctx.preview_height - 4, shquote(ctx.current_file))
+		ctx.current_file_extension == "bmp" or ctx.current_file_extension == "tiff" or
+		ctx.current_file_extension == "webp" or ctx.current_file_extension == "ico" then
+		-- Native image preview via ratatui-image (OSC protocols)
+		return nil
 	elseif not ctx.is_binary then
 		return string.format("bat --color=always --style=numbers --paging=never --wrap=never --line-range=:%d %s", ctx.preview_height, shquote(ctx.current_file))
 	else
