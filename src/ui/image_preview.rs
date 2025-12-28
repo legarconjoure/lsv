@@ -49,7 +49,7 @@ pub fn draw_image_preview(
     {
       if app.image_state.is_none()
       {
-        match init_image_protocol(dyn_img.clone())
+        match init_image_protocol(dyn_img.clone(), inner)
         {
           Ok(proto) => app.image_state = Some(Box::new(proto)),
           Err(e) =>
@@ -76,6 +76,8 @@ pub fn draw_image_preview(
       {
         if let Some(proto) = state.downcast_mut::<ImageProto>()
         {
+          use ratatui_image::{Resize, ResizeEncodeRender};
+          proto.resize_encode(&Resize::Fit(None), inner);
           use ratatui_image::StatefulImage;
           let img = StatefulImage::new();
           f.render_stateful_widget(img, inner, proto);
@@ -117,6 +119,7 @@ pub fn draw_image_preview(
 
 fn init_image_protocol(
   img: image::DynamicImage,
+  area: Rect,
 ) -> Result<ImageProto, Box<dyn std::error::Error>>
 {
   use ratatui_image::picker::Picker;
@@ -132,6 +135,9 @@ fn init_image_protocol(
     }
   };
   
-  let proto = picker.new_resize_protocol(img);
+  let mut proto = picker.new_resize_protocol(img);
+  use ratatui_image::{Resize, ResizeEncodeRender};
+  proto.resize_encode(&Resize::Fit(None), area);
+  crate::trace::log(format!("[image] initialized with area {}x{}", area.width, area.height));
   Ok(proto)
 }
