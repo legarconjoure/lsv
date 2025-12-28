@@ -63,6 +63,7 @@ pub fn draw_preview_panel(
         app.preview.cache_key = Some(key);
         app.preview.cache_lines = dynamic_lines.clone();
         app.preview.content = content;
+        app.image_state = None;
       }
     }
     else
