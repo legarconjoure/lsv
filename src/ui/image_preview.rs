@@ -25,8 +25,6 @@ pub fn draw_image_preview(
   path: &Path,
 )
 {
-  use ratatui_image::picker::Picker;
-  
   let mut block = Block::default().borders(Borders::ALL);
   if let Some(th) = app.config.ui.theme.as_ref()
   {
@@ -51,9 +49,27 @@ pub fn draw_image_preview(
     {
       if app.image_state.is_none()
       {
-        let picker = Picker::halfblocks();
-        let proto = picker.new_resize_protocol(dyn_img.clone());
-        app.image_state = Some(Box::new(proto));
+        match init_image_protocol(dyn_img.clone())
+        {
+          Ok(proto) => app.image_state = Some(Box::new(proto)),
+          Err(e) =>
+          {
+            crate::trace::log(format!("[image] protocol init failed: {}", e));
+            let text = vec![
+              Line::from(Span::styled(
+                "Image protocol unavailable",
+                Style::default().fg(Color::Yellow),
+              )),
+              Line::from(Span::styled(
+                format!("Error: {}", e),
+                Style::default().fg(Color::Gray),
+              )),
+            ];
+            let para = Paragraph::new(text);
+            f.render_widget(para, inner);
+            return;
+          }
+        }
       }
       
       if let Some(state) = app.image_state.as_mut()
@@ -97,4 +113,15 @@ pub fn draw_image_preview(
       f.render_widget(para, inner);
     }
   }
+}
+
+fn init_image_protocol(
+  img: image::DynamicImage,
+) -> Result<ImageProto, Box<dyn std::error::Error>>
+{
+  use ratatui_image::picker::Picker;
+  
+  let picker = Picker::halfblocks();
+  let proto = picker.new_resize_protocol(img);
+  Ok(proto)
 }
